@@ -1,0 +1,11 @@
+---
+title: "My Project Homepage"
+format: 
+  html:
+    embed-resources: true
+---
+
+This is my project homepage.
+
+Here is my analysis
+<https://ablbrown.github.io/husband2022/osfstorage-archive/analysis/husband.html>
