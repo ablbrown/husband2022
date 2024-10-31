@@ -1,0 +1,115 @@
+---
+title: "husband"
+format: 
+  html:
+    embed-resources: true
+---
+
+```{r}
+here::i_am("analysis/husband.qmd")
+library(here)
+library(tidyverse)
+```
+
+```{r}
+df <- read.csv(here("data", "delong maze 40Ss.csv"), 
+              header = 1, 
+              sep = ",", 
+              comment.char = "#", 
+              strip.white = T,
+              col.names = c("Index","Time","Counter","Hash","Owner","Controller","Item","Element","Type","Group","FieldName","Value","WordNum","Word","Alt","WordOn","CorrWord","RT","Sent","TotalTime","Question","Resp","Acc","RespRT"))
+```
+
+```{r}
+df_maze <- df |> 
+  filter(Controller == "Maze" & !Type == "practice")
+```
+
+```{r}
+df_maze <- df_maze |>
+  separate_wider_delim(cols = Type, delim = ".",
+                       names = c("exp", "item_num", "expect", "position_name", "position", "cloze_name", "art.cloze", "n.cloze")) 
+
+```
+
+```{r}
+df_maze <- df_maze |> 
+  select(Index, exp, item_num, expect, position, art.cloze, n.cloze, WordNum, Word, Alt, WordOn, CorrWord, RT, Sent)
+df_maze
+```
+
+```{r}
+demo <- df |> 
+  filter(Controller == "Form") |> 
+  select(Index:Value) 
+```
+
+```{r}
+demo <- demo |>
+  pivot_wider(
+    id_cols = Index,
+    names_from = FieldName,
+    values_from = Value)
+```
+
+```{r}
+df_maze <- left_join(df_maze, select(demo, Index, age), join_by(Index))
+```
+
+```{r}
+demo_female <- demo |>
+  filter(gender == "female")
+```
+filtering join
+
+```{r}
+df_nonfemaledata <- anti_join(df_maze, demo_female, join_by(Index))
+```
+anti join
+
+```{r}
+df_femaledata <- semi_join(df_maze, demo_female, join_by(Index))
+```
+
+```{r}
+df_maze <- df_maze |>
+  mutate(age = as.numeric(age))
+```
+
+```{r}
+df_maze_critical <- df_maze |>
+  filter(position == WordNum)
+```
+
+10. Summarize the reaction times with a mean, grouped by expectation. Which took longer?
+```{r}
+df_maze_critical |>
+  group_by(expect) |>
+  summarize(avg_rt = mean(RT, na.rm = TRUE))
+```
+
+11. Did all participants take longer for unexpected nouns?
+```{r}
+df_maze_critical |>
+  group_by(Index, expect) |>
+  summarize(part_mean = mean(RT, na.rm = TRUE)) |>
+  pivot_wider(names_from = expect,
+              values_from = part_mean) |>
+  mutate(diff_expec_un = unexpected - expected) |>
+  arrange(diff_expec_un)
+
+```
+Yes, all except for one!
+
+
+12. Did older participants have longer reaction times?
+```{r}
+df_maze |>
+  group_by(Index, age) |>
+  summarize(meanRT = mean(RT, na.rm = TRUE)) |>
+  ggplot(mapping = aes(x = age, y = meanRT)) +
+  
+```
+
+
+
